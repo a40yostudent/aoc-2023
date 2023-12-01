@@ -23,16 +23,16 @@ struct Day01: AdventDay {
 	func part2() -> Any {
 		return entities.map { line in
 			let line2 = String(line)
-				.replacingOccurrences(of: "one", with: "1")
-				// .replacingOccurrences(of: "two", with: "2")
-				// .replacingOccurrences(of: "three", with: "3")
-				// .replacingOccurrences(of: "four", with: "4")
-				// .replacingOccurrences(of: "five", with: "5")
-				// .replacingOccurrences(of: "six", with: "6")
-				// .replacingOccurrences(of: "seven", with: "7")
-				// .replacingOccurrences(of: "eight", with: "8")
-				// .replacingOccurrences(of: "nine", with: "9")
-			let numbers = line2.compactMap(Int.init)
+				.replacingOccurrences(of: "one", with: "o1e")
+				.replacingOccurrences(of: "two", with: "t2o")
+				.replacingOccurrences(of: "three", with: "t3e")
+				.replacingOccurrences(of: "four", with: "f4r")
+				.replacingOccurrences(of: "five", with: "f5e")
+				.replacingOccurrences(of: "six", with: "s6x")
+				.replacingOccurrences(of: "seven", with: "s7n")
+				.replacingOccurrences(of: "eight", with: "e8t")
+				.replacingOccurrences(of: "nine", with: "n9e")
+			let numbers = line2.map(String.init).compactMap(Int.init)
 			let first = numbers.first
 			let last = numbers.last
 			return first! * 10 + last!
