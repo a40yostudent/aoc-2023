@@ -22,7 +22,7 @@ struct Day01: AdventDay {
 	// Replace this with your solution for the second part of the day's challenge.
 	func part2() -> Any {
 		return entities.map { line in
-			let line = String(line)
+			let line2 = String(line)
 				.replacingOccurrences(of: "one", with: "1")
 				// .replacingOccurrences(of: "two", with: "2")
 				// .replacingOccurrences(of: "three", with: "3")
@@ -32,7 +32,7 @@ struct Day01: AdventDay {
 				// .replacingOccurrences(of: "seven", with: "7")
 				// .replacingOccurrences(of: "eight", with: "8")
 				// .replacingOccurrences(of: "nine", with: "9")
-			let numbers = line.compactMap(Int.init)
+			let numbers = line2.compactMap(Int.init)
 			let first = numbers.first
 			let last = numbers.last
 			return first! * 10 + last!
