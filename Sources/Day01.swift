@@ -11,7 +11,6 @@ struct Day01: AdventDay {
 	
 	// Replace this with your solution for the first part of the day's challenge.
 	func part1() -> Any {
-		// Calculate the sum of the first set of input data
 		return entities.map { line in
 			let numbers = line.map(String.init).compactMap(Int.init)
 			let first = numbers.first
@@ -22,8 +21,21 @@ struct Day01: AdventDay {
 	
 	// Replace this with your solution for the second part of the day's challenge.
 	func part2() -> Any {
-		// Sum the maximum entries in each set of data
-//		entities.map { $0.max() ?? 0 }.reduce(0, +)
-		return 0
+		return entities.map { line in
+			let line = line
+				.replacingOccurrence(of: "one", with: "1")
+				.replacingOccurrence(of: "two", with: "2")
+				.replacingOccurrence(of: "three", with: "3")
+				.replacingOccurrence(of: "four", with: "4")
+				.replacingOccurrence(of: "five", with: "5")
+				.replacingOccurrence(of: "six", with: "6")
+				.replacingOccurrence(of: "seven", with: "7")
+				.replacingOccurrence(of: "eight", with: "8")
+				.replacingOccurrence(of: "nine", with: "9")
+			let numbers = line.map(String.init).compactMap(Int.init)
+			let first = numbers.first
+			let last = numbers.last
+			return first! * 10 + last!
+		}.reduce(0, +)
 	}
 }
