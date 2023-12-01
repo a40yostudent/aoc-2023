@@ -1,4 +1,3 @@
-import Foundation
 import Algorithms
 
 struct Day01: AdventDay {
@@ -23,7 +22,7 @@ struct Day01: AdventDay {
 	// Replace this with your solution for the second part of the day's challenge.
 	func part2() -> Any {
 		return entities.map { line in
-			let line = line.map(String.init)
+			let line = String(line)
 				.replacingOccurrences(of: "one", with: "1")
 				.replacingOccurrences(of: "two", with: "2")
 				.replacingOccurrences(of: "three", with: "3")
