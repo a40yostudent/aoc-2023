@@ -71,7 +71,67 @@ struct Day03: AdventDay {
 	
 	// Replace this with your solution for the second part of the day's challenge.
 	func part2() -> Any {
-		return 0
+		var parts: [Part] = []
+		var symbols: [Symbol] = []
+		
+		var rowIndex = 0
+		for line in entities {
+			var partialNumber = 0
+			var digitPos = 0
+			
+			// Scan every line reversed, so numbers can be added up while they're discovered
+			// Symbols will be saved with reversed index
+			var colIndex = 0
+			for char in line.reversed() {
+				// is a number
+				if let number = char.wholeNumberValue {
+					switch digitPos {
+						case 2:
+							partialNumber += number * 100
+						case 1:
+							partialNumber += number * 10
+						default:
+							partialNumber += number
+					}
+					digitPos += 1
+				} else {
+					// is a dot or a symbol
+					// so if a number has been completed, save it
+					if partialNumber > 0 {
+						parts.append(Part(number: partialNumber,
+										  region: (row: rowIndex - 1...rowIndex + 1,
+												   col: colIndex - digitPos - 1...colIndex)))
+						partialNumber = 0
+						digitPos = 0
+					}
+					
+					if !(char == ".") {
+						// is a symbol
+						symbols.append(Symbol(char: char, location: (row: rowIndex, col: colIndex)))
+					}
+				}
+				
+				colIndex += 1
+			}
+			
+			rowIndex += 1
+		}
+		
+		// validate all parts
+		for (index, part) in parts.indexed() {
+			for (indexS, symbol) in symbols.indexed() {
+				if part.region.row.contains(symbol.location.row) &&
+					part.region.col.contains(symbol.location.col) {
+					parts[index].isValid = true
+					symbols[indexS].adjacencyList.append(part.number)
+				}
+			}
+		}
+		
+		return symbols.filter { symbol in symbol.char == "*" }
+			.filter { symbol in symbol.adjacencyList.count == 2 }
+			.map { symbol in symbol.adjacencyList.reduce(1, *) }
+			.reduce(0, +)
 	}
 }
 
@@ -86,5 +146,7 @@ extension Day03 {
 	private struct Symbol {
 		let char: Character
 		let location: (row: Int, col: Int)
+		
+		var adjacencyList: [Int] = []
 	}
 }
