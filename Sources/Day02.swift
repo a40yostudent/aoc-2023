@@ -52,7 +52,6 @@ struct Day02: AdventDay {
 		var result = 0
 		
 		for line in entities {
-			let gameNumber = line.split(separator: ":")[0].split(separator: " ")[1]
 			let gameSets = line.split(separator: ":")[1].split(separator: ";")
 			
 			var red = 0
