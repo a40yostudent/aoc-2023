@@ -1,195 +1,269 @@
 import Algorithms
 
 struct Day10: AdventDay {
+
 	// Save your data in a corresponding text file in the `Data` directory.
-	var data: String
+	let data: String
 	
-	// Splits input data into its component parts and convert from string.
-	var entities: [[Character]] {
-		var entities = [[Character]]()
+	let map: [[Character]]
+	fileprivate let adj: [Position: (Position, Position)]
+	fileprivate let start: Position
+		
+	init(data: String) {
+		// data
+		self.data = data
+		
+		// map
 		let lines = data.split(separator: "\n")
+		var map: [[Character]] = []
 		for line in lines {
-			var chars = [Character]()
+			var newLine = [Character]()
 			for char in line {
-				chars.append(char)
+				newLine.append(char)
 			}
-			entities.append(chars)
+			map.append(newLine)
 		}
-		return entities
-	}
-	
-	// Replace this with your solution for the first part of the day's challenge.
-	func part1() -> Any {
-		// A node is defined as it follows: yPosition * 1000 + xPosition
 		
-		var adjacencyList: [Int: (Int, Int)] = [:]
-		var sNode: Int?
+		// adj and start
+		var adj: [Position: (Position, Position)] = [:]
+		var start: Position?
+		var startChar: Character?
 		
-		for (y, line) in entities.enumerated() {
-			for (x, char) in line.enumerated() {
-				let position = y * 1000 + x
-				
-				switch char {
+		for (y, mapLine) in map.enumerated() {
+			for (x, char) in mapLine.enumerated() {
+				let current = Position(x: x, y: y)
+				switch char /*map[y][x]*/ {
 					case "|":
-						adjacencyList[position] = (position - 1000, position + 1000)
+						adj[current] = (current.up, current.down)
 					case "-":
-						adjacencyList[position] = (position - 1, position + 1)
+						adj[current] = (current.left, current.right)
 					case "L":
-						adjacencyList[position] = (position - 1000, position + 1)
+						adj[current] = (current.up, current.right)
 					case "J":
-						adjacencyList[position] = (position - 1000, position - 1)
+						adj[current] = (current.left, current.up)
 					case "7":
-						adjacencyList[position] = (position - 1, position + 1000)
+						adj[current] = (current.left, current.down)
 					case "F":
-						adjacencyList[position] = (position + 1, position + 1000)
+						adj[current] = (current.down, current.right)
 					case "S":
-						sNode = position
+						start = current
+						var sAdj = [Position]()
+						if current.right.char(in: map) == "-" ||
+							current.right.char(in: map) == "7" ||
+							current.right.char(in: map) == "J" {
+							sAdj.append(current.right)
+						}
+						if current.left.char(in: map) == "-" ||
+							current.left.char(in: map) == "F" ||
+							current.left.char(in: map) == "L" {
+							sAdj.append(current.left)
+						}
+						if current.up.char(in: map) == "|" ||
+							current.up.char(in: map) == "7" ||
+							current.up.char(in: map) == "F" {
+							sAdj.append(current.up)
+						}
+						if current.down.char(in: map) == "|" ||
+							current.down.char(in: map) == "L" ||
+							current.down.char(in: map) == "J" {
+							sAdj.append(current.down)
+						}
+						if sAdj.contains(current.right) &&
+							sAdj.contains(current.up) {
+							startChar = "L"
+							adj[current] = (current.up, current.right)
+						} else
+						if sAdj.contains(current.right) &&
+							sAdj.contains(current.down){
+							startChar = "F"
+							adj[current] = (current.down, current.right)
+						} else
+						if sAdj.contains(current.right) &&
+							sAdj.contains(current.left){
+							startChar = "-"
+							adj[current] = (current.left, current.right)
+						} else
+						if sAdj.contains(current.left) &&
+							sAdj.contains(current.up){
+							startChar = "J"
+							adj[current] = (current.up, current.left)
+						} else
+						if sAdj.contains(current.left) &&
+							sAdj.contains(current.down){
+							startChar = "7"
+							adj[current] = (current.down, current.left)
+						} else
+						if sAdj.contains(current.up) &&
+							sAdj.contains(current.down){
+							startChar = "|"
+							adj[current] = (current.down, current.up)
+						} else {
+							fatalError("adjacency error around start position")
+						}
 					default:
 						continue // "."
 				}
 			}
 		}
-		
-		guard let sNode else { fatalError("starting node not found") }
-
-		if entities[sNode / 1000][sNode % 1000] == "S" {
-			print("sNode found")
-		} else {
-			print(entities[sNode / 1000][sNode % 1000], " found at: ", (sNode % 1000), (sNode / 1000))
-		}
-		
-		// Traversing the pipes
-		var steps = 0
-		var prevNode = sNode
-		var currentNode = -1
-		
-		// Find first node after sNode, because sNode has no visibl edges. I know it will pass the 2nd test.
-		if entities[sNode / 1000][sNode % 1000 + 1] == "7" ||
-			entities[sNode / 1000][sNode % 1000 + 1] == "J" {
-			currentNode = sNode + 1
+		guard let start, let startChar else { fatalError("start node not found") }
+		map[start.y][start.x] = startChar
+		self.adj = adj
+		self.map = map
+		self.start = start
+	}
+	
+	// takes a lot of time...
+	func part1() -> Any {
+		var steps = 1
+		var currentNode = start
+		var nextNode = adj[currentNode]!.0
+		while nextNode != start {
 			steps += 1
-		} else if entities[sNode / 1000][sNode % 1000 - 1] == "F" ||
-					entities[sNode / 1000][sNode % 1000 - 1] == "L" {
-			currentNode = sNode - 1
-			steps += 1
-		}
-		
-		while currentNode != sNode {
-			guard let nextNode = adjacencyList[currentNode] else {
-				fatalError("next node not found on adjacency list")
-			}
-			if nextNode.0 != prevNode {
-				prevNode = currentNode
-				currentNode = nextNode.0
-				steps += 1
+			guard let nextAdj = adj[nextNode] else { fatalError("next node adjacency") }
+			let temp = nextNode
+			if nextAdj.0 == currentNode {
+				nextNode = nextAdj.1
 			} else {
-				prevNode = currentNode
-				currentNode = nextNode.1
-				steps += 1
+				nextNode = nextAdj.0
 			}
+			currentNode = temp
 		}
-		
-		
 		return steps / 2
 	}
 	
 	// Replace this with your solution for the second part of the day's challenge.
 	func part2() -> Any {
-		// A node is defined as it follows: yPosition * 1000 + xPosition
+		// make a clean map
+		var cleanMap = Array(repeating: Array(repeating: Character("."), count: map[0].count), count: map.count)
+		cleanMap[start.y][start.x] = map[start.y][start.x]
+		var currentNode = start
+		var nextNode = adj[currentNode]!.0
+		while nextNode != start {
+			cleanMap[nextNode.y][nextNode.x] = map[nextNode.y][nextNode.x]
+			guard let nextAdj = adj[nextNode] else { fatalError("next node adjacency") }
+			let temp = nextNode
+			if nextAdj.0 == currentNode {
+				nextNode = nextAdj.1
+			} else {
+				nextNode = nextAdj.0
+			}
+			currentNode = temp
+		}
 		
-		var adjacencyList: [Int: (Int, Int)] = [:]
-		var sNode: Int?
-		
-		for (y, line) in entities.enumerated() {
+		var debugMap = cleanMap // debug
+		var count = 0
+		for (y, line) in cleanMap.enumerated() {
+			var inside = false
+			var lastWasAnF = false
+			var lastWasAnL = false
 			for (x, char) in line.enumerated() {
-				let position = y * 1000 + x
-				
 				switch char {
 					case "|":
-						adjacencyList[position] = (position - 1000, position + 1000)
-					case "-":
-						adjacencyList[position] = (position - 1, position + 1)
-					case "L":
-						adjacencyList[position] = (position - 1000, position + 1)
-					case "J":
-						adjacencyList[position] = (position - 1000, position - 1)
-					case "7":
-						adjacencyList[position] = (position - 1, position + 1000)
+						inside.toggle()
 					case "F":
-						adjacencyList[position] = (position + 1, position + 1000)
-					case "S":
-						sNode = position
+						lastWasAnF = true
+					case "L":
+						lastWasAnL = true
+					case "7":
+						if lastWasAnL {
+							inside.toggle()
+							lastWasAnL = false
+						}
+						lastWasAnF = false
+					case "J":
+						if lastWasAnF {
+							inside.toggle()
+							lastWasAnF = false
+						}
+						lastWasAnL = false
+					case ".":
+						if inside {
+							count += 1
+							debugMap[y][x] = "I"
+						} else {
+							debugMap[y][x] = "O"
+						}
+					case "-":
+						continue
 					default:
-						continue // "."
+						fatalError("char not recognized")
 				}
 			}
 		}
 		
-		guard let sNode else { fatalError("starting node not found") }
-		
-		if entities[sNode / 1000][sNode % 1000] == "S" {
-			print("sNode found")
-		} else {
-			print(entities[sNode / 1000][sNode % 1000], " found at: ", (sNode % 1000), (sNode / 1000))
-		}
-		
-		// Traversing the pipes
-		var steps = 0
-		var prevNode = sNode
-		var currentNode = -1
-		
-		// Save pipes that are on the main track
-		var mainPipe = [Int]()
-		
-		// Find first node after sNode, because sNode has no visibl edges. I know it will pass the 2nd test.
-		if entities[sNode / 1000][sNode % 1000 + 1] == "7" ||
-			entities[sNode / 1000][sNode % 1000 + 1] == "J" {
-			currentNode = sNode + 1
-			steps += 1
-		} else if entities[sNode / 1000][sNode % 1000 - 1] == "F" ||
-					entities[sNode / 1000][sNode % 1000 - 1] == "L" {
-			currentNode = sNode - 1
-			steps += 1
-		}
-		
-		while currentNode != sNode {
-			guard let nextNode = adjacencyList[currentNode] else {
-				fatalError("next node not found on adjacency list")
-			}
-			mainPipe.append(currentNode)
-			
-			if nextNode.0 != prevNode {
-				prevNode = currentNode
-				currentNode = nextNode.0
-				steps += 1
-			} else {
-				prevNode = currentNode
-				currentNode = nextNode.1
-				steps += 1
-			}
-		}
-		
-		// create a new empty map
-		var map = [[Character]]()
-		for y in 0..<140 {
-			var line = [Character]()
-			for x in 0..<140 {
-				if (mainPipe.firstIndex(of: y * 1000 + x) != nil) {
-					line.append("O")
-				} else {
-					line.append(".")
+		// pretty printed map
+		var prettyMap = [[Character]]()
+		for line in debugMap {
+			var newLine = [Character]()
+			for char in line {
+				switch char {
+					case "F":
+						newLine.append("┌")
+					case "-":
+						newLine.append("─")
+					case "7":
+						newLine.append("┐")
+					case "|":
+						newLine.append("│")
+					case "L":
+						newLine.append("└")
+					case "J":
+						newLine.append("┘")
+					case ".":
+						newLine.append(".")
+					case "I":
+						newLine.append("I")
+					case "O":
+						newLine.append("O")
+					default:
+						continue
 				}
 			}
-			map.append(line)
+			prettyMap.append(newLine)
 		}
 		
-		// print the map
-		for line in map {
+		print("\n")
+		for line in prettyMap {
 			print(String(line))
 		}
+		return count
+	}
 		
-		// and now I don't know what to do
+}
+
+extension Day10 {
+	
+	fileprivate struct Position: Hashable, CustomDebugStringConvertible {
 		
-		return steps / 2
+		let x: Int
+		let y: Int
+		
+		var up: Position {
+			return Position(x: x, y: y-1)
+		}
+		
+		var down: Position {
+			return Position(x: x, y: y+1)
+		}
+		
+		var left: Position {
+			return Position(x: x-1, y: y)
+		}
+		
+		var right: Position {
+			return Position(x: x+1, y: y)
+		}
+		
+		func char(in map: [[Character]]) -> Character? {
+			guard self.x > -1 && self.y > -1 else {
+				return nil
+			}
+			
+			return map[self.y][self.x]
+		}
+		
+		var debugDescription: String {
+			"x: \(x), y: \(y)"
+		}
 	}
 }
